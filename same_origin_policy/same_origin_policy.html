@@ -17,7 +17,7 @@
 			document.write("window.name: " + window.name + "<br/>");
 		</script>
 
-		<hr>
+		<hr/>
 
 		<h2>What does the Same Origin Policy enforce?</h2>
 		    <p>
@@ -37,7 +37,7 @@
 					<li>So by default: you can do lots of things with cross-origin resources. But <b>preventing cross-origin reads is kind of the whole ballgame.</b> Those defaults are more-or-less what people are talking about when they talk about the “Same-Origin Policy.”</li>
 				</ul>
 			</p>
-		<hr>
+		<hr/>
 
 		<h2>SOP does *not* apply to scripts loaded via the &lt;script&gt; tag, they're expected to be static:</h2>
 		<script src="test.js"></script> <!-- Achtung!: <script src="test.js" /> geht nicht!!!!! -->
@@ -45,10 +45,10 @@
 			document.write("super_secret_value_in_test_js: " + super_secret_value_in_test_js + "<br/>");
 			document.write("super_secret_function.toString(): " + super_secret_function.toString().replaceAll('\n','').replaceAll('\t', '').substring(0,100) + "<br/>");
 		</script>
-		<br>
+		<br/>
 		This is what we call <b>Cross-Site Scripting Inclusion (XSSI)!</b>
 
-		<hr>
+		<hr/>
 
 		<h2>Neither does it apply to embedded stylesheets (in case you wondered):</h2>
 		<script>
@@ -56,7 +56,7 @@
 			document.write("--secret-custom-property2: " + getComputedStyle(document.body).getPropertyValue("--secret-custom-property2") + "<br/>");
 		</script>
 
-		<hr>
+		<hr/>
 
 		<h2>SOP *does* apply to iframes (with very few exceptions)...:</h2>
 		<iframe src="test.html" id="test_iframe" width="500px" onload="
@@ -65,23 +65,23 @@
 			try {
 				test_iframe_contentWindow_name.innerText = 'test_iframe.contentWindow.name: ' + test_iframe.contentWindow.name;
 			} catch (error) {
-				test_iframe_contentWindow_name.innerText = 'test_iframe.contentWindow.name: <error: ' + error + '>';
+				test_iframe_contentWindow_name.innerText = 'test_iframe.contentWindow.name: &lt;error: ' + error + '&gt;';
 			}
 			try {
 				test_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'test_iframe.contentWindow.document.documentElement.outerHTML: ' + test_iframe.contentWindow.document.documentElement.outerHTML.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
 			} catch (error) {
-				test_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'test_iframe.contentWindow.document.documentElement.outerHTML: <error: ' + error + '>';
+				test_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'test_iframe.contentWindow.document.documentElement.outerHTML: &lt;error: ' + error + '&gt;';
 			}
 		"></iframe><br/>
 		<span id="test_iframe_src"></span><br/>
 		<span id="test_iframe_contentWindow_length"></span><br/> <!-- cf. https://portswigger.net/web-security/cors/same-origin-policy -->
 		<span id="test_iframe_contentWindow_name"></span><br/>
 		<span id="test_iframe_contentWindow_document_documentElement_outerHTML"></span><br/>
-		<input type="button" value="Retrieve test_iframe.contentWindow.name by navigating iframe to about:blank!" onclick="test_iframe.src='about:blank'"> <!-- https://stackoverflow.com/questions/19487729/cross-domain-using-window-name-double-onload-should-be-used -->
-		<br>
+		<input type="button" value="Retrieve test_iframe.contentWindow.name by navigating iframe to about:blank!" onclick="test_iframe.src='about:blank'" /> <!-- https://stackoverflow.com/questions/19487729/cross-domain-using-window-name-double-onload-should-be-used -->
+		<br/>
 		<i>Exceptions to the SOP:</i> <tt>contentWindow.length, postMessage(), contentWindow.name</tt> (see by clicking the button above)
 
-		<hr>
+		<hr/>
 
 		<h2>...unless the iframe has the same origin:</h2>
 		<iframe src="same_origin_policy.html" id="self_iframe" width="500px" onload="
@@ -95,7 +95,7 @@
 		<span id="self_iframe_contentWindow_name"></span><br/>
 		<span id="self_iframe_contentWindow_document_documentElement_outerHTML"></span><br/>
 
-		<hr>
+		<hr/>
 
 		<h2>SOP also applies to XMLHttpRequests:</h2>
 		<span id="xmlhttprequest_get_test_html"></span><br/>
@@ -108,7 +108,7 @@
 				try {
 				    xmlHttp = new XMLHttpRequest();
 				} catch(e) {
-				    xmlhttprequest_get_test_html.innerText = "XMLHttpRequest " + method + " " + url + " failed: <error: " + e + ">";
+				    xmlhttprequest_get_test_html.innerText = "XMLHttpRequest " + method + " " + url + " failed: &lt;error: " + e + "&gt;";
 				}
 				if (xmlHttp) {
 				    xmlHttp.open(method, url, true);
@@ -143,15 +143,15 @@
 			</li>
 		</ol>
 
-		<hr>
+		<hr/>
 
 		<h2>SOP sort of partly applies to images, we can find out whether an image exists and its size but no more:</h2>
 		<img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" id="google_logo" height="50px"
 		 onload="google_logo_info.innerText = 'google_logo: ' + google_logo.naturalWidth + ' x ' + google_logo.naturalHeight"
-		 onerror="google_logo_info.innerText = 'google_logo: <error>'"><br/>
+		 onerror="google_logo_info.innerText = 'google_logo: &lt;error&gt;'" /><br/>
 		<img src="https://www.example.com/does_not_exist.jpg" id="non_existing_image"
 		 onload="non_existing_image_info.innerText = 'non_existing_image: ' + non_existing_image.naturalWidth + ' x ' + non_existing_image.naturalHeight"
-		 onerror="non_existing_image_info.innerText = 'non_existing_image: <error>'"><br/>
+		 onerror="non_existing_image_info.innerText = 'non_existing_image: &lt;error&gt;'" /><br/>
 		<span id="google_logo_info"></span><br/>
 		<span id="non_existing_image_info"></span><br/>
 
