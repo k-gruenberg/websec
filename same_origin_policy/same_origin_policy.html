@@ -155,5 +155,51 @@
 		<span id="google_logo_info"></span><br/>
 		<span id="non_existing_image_info"></span><br/>
 
+		<hr/>
+
+		<h2>Deliberately bypassing the Same Origin Policy:</h2>
+		Sometimes, one wants to <b>deliberately bypass the SOP</b> and communicate cross-origin in mutual consent; there are multiple ways of achieving that (<a href="https://en.wikipedia.org/wiki/Same-origin_policy#Relaxing_the_same-origin_policy">Wikipedia</a> does a good job at listing and summarizing them):
+		<ul>
+			<li><span style="color:red"><tt>window.name</tt></span> (an old-fashioned ugly work-around, see by clicking the button above)</li>
+			<li><b>Domain Relaxation</b> by setting <b><tt>document.domain</tt></b> to the same value:<br/>
+				<cite>
+					If two windows (or frames) contain scripts that set domain to the same value, the same-origin policy is relaxed for these two windows, and each window can interact with the other. For example, cooperating scripts in documents loaded from orders.example.com and catalog.example.com might set their document.domain properties to “example.com”, thereby making the documents appear to have the same origin and enabling each document to read properties of the other. Setting this property implicitly sets the port to null, which most browsers will interpret differently from port 80 or even an unspecified port. To assure that access will be allowed by the browser, set the document.domain property of both pages.
+				</cite>
+			</li>
+			<li><b>Cross-Origin Resource Sharing (<span style="color:green">CORS</span>):</b><br/>
+				<cite>
+					This standard extends HTTP with a new Origin request header and a new Access-Control-Allow-Origin response header. It allows servers to use a header to explicitly list origins that may request a file or to use a wildcard and allow a file to be requested by any site.
+				</cite>
+			</li>
+			<li><b>Cross-document messaging</b> using the <b><tt>postMessage()</tt></b> method:<br/>
+				<cite>
+					[C]ross-document messaging allows a script from one page to pass textual messages to a script on another page regardless of the script origins. Calling the postMessage() method on a Window object asynchronously fires an "onmessage" event in that window, triggering any user-defined event handlers. A script in one page still cannot directly access methods or variables in the other page, but they can communicate safely through this message-passing technique. 
+				</cite>
+			</li>
+			<li><b><span style="color:red">JSONP</span> (JSON with Padding):</b><br/>
+				This "historical" technique is essentially "XSSI on purpose":<br/>
+				<cite>
+					Since HTML <tt>&lt;script&gt;</tt> elements are allowed to retrieve and execute content from other domains, a page can bypass the same-origin policy and receive JSON data from a different domain by loading a resource that returns a JSONP payload. JSONP payloads consist of an internal JSON payload wrapped by a pre-defined function call [the padding "P" in "JSONP"]. When the script resource is loaded by the browser, the designated callback function will be invoked to process the wrapped JSON payload. 
+				</cite>
+			</li>
+		</ul>
+
+		<hr/>
+
+		<h2>Try out Cross-document messaging using <tt>postMessage()</tt>:</h2>
+		<iframe src="post_message_partner.html" id="post_message_partner_iframe" width="500px"></iframe><br/>
+		Send message: <input type="text" id="send_message" /><input type="button" value="Post message!" onclick="
+			post_message_partner_iframe.contentWindow.postMessage(send_message.value, '*')
+		" /><br/>
+		Received messages:<br/>
+		<span id="received_messages"></span>
+		<script>
+			// cf. https://en.wikipedia.org/wiki/Web_Messaging#Example:
+			function receiver(event) {
+				received_messages.innerHTML += "'" + event.origin + "' sent: '" + event.data + "'<br/>"
+			}
+			window.addEventListener('message', receiver, false); //useCapture=false, see https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+		</script>
+
 	</body>
 </html>
