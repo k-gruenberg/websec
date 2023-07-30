@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Content Security Policy (CSP)</title>
+		<meta http-equiv="Content-Security-Policy" content="script-src 'nonce-abcd' 'nonce-wxyz' 'sha256-mbUqeqrWHlx2EmgPldmAK0AOTRUtEmMtKOZY9SUKId8=' 'strict-dynamic'; img-src http://*.google.com;" />
+		<!-- Note: ‘frame-ancestors’ (Not supported when delivered via meta element).-->
+	</head>
+	<body>
+		<h1>Content Security Policy (CSP)</h1>
+
+		<p>
+			<i>Exercise Sheet 05:</i>
+			CSP is an important <b>mitigation technique</b> <i>preventing unwanted scripts being executed</i> by an unknowing user in case of an <b>XSS</b> vulnerability.
+		</p>
+
+		<p>
+			The CSP for this website is:<br/>
+			<tt><span id="xmlhttprequest_get_self"></span></tt><br/>
+			<script nonce="abcd">
+				function xml_http(method, url, output) {
+					// from https://de.wikipedia.org/wiki/XMLHttpRequest#Codebeispiele_(JavaScript):
+					var xmlHttp = null;
+					try {
+					    xmlHttp = new XMLHttpRequest();
+					} catch(e) {
+					    output.innerText = "XMLHttpRequest " + method + " " + url + " failed: &lt;error: " + e + "&gt;";
+					}
+					if (xmlHttp) {
+					    xmlHttp.open(method, url, true);
+					    xmlHttp.onreadystatechange = function () {
+					        if (xmlHttp.readyState == 4) {
+					        	let response = xmlHttp.responseText;
+					            output.innerText = response.substr(response.indexOf("\u003Cmeta ")).split("\u003E")[0] + "\u003E";
+					        }
+					    };
+					    xmlHttp.send(null);
+					}
+				}
+				xml_http('GET', 'content_security_policy.html', xmlhttprequest_get_self);
+			</script>
+		</p>
+
+		<p>
+			Your input will get printed here, unescaped (suppose this was some sort of <b>XSS</b> vulnerability): <script nonce="abcd">document.write(decodeURI(window.location.search.substr(1)));</script><br/>
+			Your input:<br/>
+			<textarea id="user_input_textarea" rows="5" cols="125"></textarea><br/>
+			<input type="button" id="print_button" value="Print!" /> <!-- onclick="..." doesn't work due to CSP ^^ -->
+			<script nonce="abcd">
+				user_input_textarea.value = decodeURI(window.location.search.substr(1))
+				print_button.addEventListener("click", () => window.location.search = "?" + user_input_textarea.value)
+			</script>
+		</p>
+
+		<p>
+			Here are some things you might wanna try out:<br/>
+			<ul>
+				<li><span style="color:green">&lt;b&gt;Hello World&lt;/b&gt;</span></li>
+				<li><span style="color:red  ">&lt;script&gt;alert("will not work!")&lt;/script&gt;</span></li>
+				<li><span style="color:green">&lt;script&gt;alert("works due to correct hash!")&lt;/script&gt;</span></li>
+				<li><span style="color:green">&lt;script nonce="abcd"&gt;alert("works!")&lt;/script&gt;</span></li>
+				<li><span style="color:green">&lt;script nonce="wxyz"&gt;alert("works too!")&lt;/script&gt;</span></li>
+				<li><span style="color:red  ">&lt;script nonce="foo"&gt;alert("will not work!")&lt;/script&gt;</span></li>
+				<li><span style="color:red  ">&lt;img src="" onerror="alert('will not work!')"&gt;</span></li>
+				<li><span style="color:green">&lt;img src="http://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" /&gt;</span></li>
+				<li><span style="color:green">&lt;img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" /&gt;</span></li>
+				<li><span style="color:red  ">&lt;img src="http://de.wikipedia.org/static/images/project-logos/dewiki-2x.png" /&gt;</span></li>
+				<li><span style="color:red  ">&lt;img src="https://de.wikipedia.org/static/images/project-logos/dewiki-2x.png" /&gt;</span></li>
+				<!-- ToDo: strict-dynamic -->
+			</ul>
+		</p>
+	</body>
+</html>
