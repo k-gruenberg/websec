@@ -108,7 +108,7 @@
 				try {
 				    xmlHttp = new XMLHttpRequest();
 				} catch(e) {
-				    xmlhttprequest_get_test_html.innerText = "XMLHttpRequest " + method + " " + url + " failed: &lt;error: " + e + "&gt;";
+				    output.innerText = "XMLHttpRequest " + method + " " + url + " failed: &lt;error: " + e + "&gt;";
 				}
 				if (xmlHttp) {
 				    xmlHttp.open(method, url, true);
