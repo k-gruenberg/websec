@@ -111,7 +111,7 @@
 				    output.innerText = "XMLHttpRequest " + method + " " + url + " failed: &lt;error: " + e + "&gt;";
 				}
 				if (xmlHttp) {
-				    xmlHttp.open(method, url, true);
+				    xmlHttp.open(method, url, true); // async=true
 				    xmlHttp.onreadystatechange = function () {
 				        if (xmlHttp.readyState == 4) {
 				            output.innerText = "XMLHttpRequest " + method + " " + url + " returned status " + xmlHttp.status + ": " + xmlHttp.responseText.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
@@ -180,7 +180,8 @@
 				This "historical" technique is essentially "XSSI on purpose":<br/>
 				<cite>
 					Since HTML <tt>&lt;script&gt;</tt> elements are allowed to retrieve and execute content from other domains, a page can bypass the same-origin policy and receive JSON data from a different domain by loading a resource that returns a JSONP payload. JSONP payloads consist of an internal JSON payload wrapped by a pre-defined function call [the padding "P" in "JSONP"]. When the script resource is loaded by the browser, the designated callback function will be invoked to process the wrapped JSON payload. 
-				</cite>
+				</cite><br/>
+				<span style="color:red">DANGER:</span> JSONP fetches and executes arbitrary JavaScript code. This opens up an XSS vector when an attacker takes control over the site that provides the JSONP API! <!-- Source: https://www.mediawiki.org/wiki/Manual:CORS#Alternatives -->
 			</li>
 		</ul>
 
@@ -199,6 +200,82 @@
 				received_messages.innerHTML += "'" + event.origin + "' sent: '" + event.data + "'<br/>"
 			}
 			window.addEventListener('message', receiver, false); //useCapture=false, see https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+		</script>
+
+		<hr/>
+
+		<h2>See <span style="color:red">JSONP</span> in action with the MediaWiki/Wikipedia API:</h2>
+		<p>
+			On this site:<br/>
+			<tt>&lt;script src="https://en.wikipedia.org/w/api.php?action=query&amp;list=random&amp;rnlimit=3&amp;format=json&amp;callback=jsonp_callback"&gt;&lt;/script&gt;</tt>
+		</p>
+		<p>
+			The script included looks somewhat like this: <tt>/**/jsonp_callback({ /* ... */ })</tt>
+		</p>
+		<p>
+			Also on this site:<br/>
+			<tt>&lt;script&gt;var jsonp_callback = function (response) { /* ... */ }&lt;/script&gt;</tt>
+		</p>
+		<p>
+			Result (populated by the <tt>jsonp_callback</tt> function defined on this site):
+		</p>
+		<p>
+			<span id="jsonp_result"></span>
+		</p>
+		<p>
+			<i>(adapted from <a href="https://www.mediawiki.org/wiki/API:Cross-site_requests#JSONP_usage">here</a>)</i>
+		</p>
+		<script>
+			/**
+			 * The function to wrap the result
+			 */
+			var jsonp_callback = function (response) {
+			    var pages = response.query.random; // Process the output to get the titles
+			    jsonp_result.innerHTML = ""
+			    Object.keys(pages).forEach(function(key) {
+			        jsonp_result.innerHTML += pages[key].title + "<br/>"; //console.log(pages[key].title);
+			    });
+			};
+		</script>
+		<script src="https://en.wikipedia.org/w/api.php?action=query&amp;list=random&amp;rnlimit=3&amp;format=json&amp;callback=jsonp_callback"></script>
+		<!-- example respone: /**/jsonp_callback({"batchcomplete":"","continue":{"rncontinue":"0.263576693472|0.26357675623|52792327|0","continue":"-||"},"query":{"random":[{"id":25485013,"ns":0,"title":"Oboe Concerto No. 1 (Handel)"},{"id":10274813,"ns":1,"title":"Talk:John Sydenham"},{"id":68571374,"ns":0,"title":"2021\u201322 DHB-Pokal"}]}}) -->
+
+		<hr/>
+
+		<h2>See <span style="color:green">CORS</span> in action:</h2>
+		<p>
+			Note: <a href="http://prefix.cc/">prefix.cc</a> is one of the sites supporting CORS listed on <a href="https://enable-cors.org/resources.html">enable-cors.org</a>, it's one that's very simple and requires no API key!
+		</p>
+		<p>
+			The result of sending a XMLHttpRequest GET request to <tt>http://prefix.cc/</tt> (with request header <b><tt>Origin: null</tt></b> because this is a <tt>file:///</tt> on a user's computer):<br/> <!-- cf. https://stackoverflow.com/questions/22397072/are-there-any-browsers-that-set-the-origin-header-to-null-for-privacy-sensitiv -->
+			<span id="cors_example_result"></span>
+		</p>
+		<p>
+			<a href="http://prefix.cc/">prefix.cc</a> sends (among others) <b><tt>Access-Control-Allow-Origin: *</tt></b> as a response header.<br/>
+			We can't actually read that here though, this would only be possible if <a href="http://prefix.cc/">prefix.cc</a> responded with a <tt>Access-Control-Expose-Headers</tt> header as well <i>(a comma-separated list of response headers that shall be exposed to the client)</i>; which it doesn't:<br/> <!-- cf. https://stackoverflow.com/questions/14686769/xmlhttp-getresponseheader-not-working-for-cors -->
+			<tt>xmlHttp.getAllResponseHeaders():</tt> <span id="cors_example_result_headers"></span>
+		</p>
+		<script>
+			// from https://de.wikipedia.org/wiki/XMLHttpRequest#Codebeispiele_(JavaScript):
+			var method_ = "GET";
+			var url_ = "http://prefix.cc/";
+			var xmlHttp = null;
+			try {
+			    xmlHttp = new XMLHttpRequest();
+			} catch(e) {
+			    cors_example_result.innerText = "XMLHttpRequest " + method_ + " " + url_ + " failed: &lt;error: " + e + "&gt;";
+			}
+			if (xmlHttp) {
+			    xmlHttp.open(method_, url_, true); // async=true
+			    xmlHttp.onreadystatechange = function () {
+			        if (xmlHttp.readyState == 4) {
+			            cors_example_result.innerText = "XMLHttpRequest " + method_ + " " + url_ + " returned status " + xmlHttp.status + ": " + xmlHttp.responseText.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
+			            cors_example_result_headers.innerText = xmlHttp.getAllResponseHeaders();
+
+			        }
+			    };
+			    xmlHttp.send(null);
+			}
 		</script>
 
 	</body>
